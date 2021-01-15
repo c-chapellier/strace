@@ -1,20 +1,20 @@
 #include "strace.h"
 
-// int ptrace(int request, pid_t pid, caddr_t addr, int data);
-// pid_t wait4(pid_t pid, int *stat_loc, int options, struct rusage *rusage);
+// long ptrace(enum __ptrace_request request, pid_t pid, void *addr, void *data);
+// pid_t wait4(pid_t pid, int *wstatus, int options, struct rusage *rusage);
 
-void check_status(int status)
+void check_wstatus(int wstatus)
 {
-    printf("status: ");
-    if (WIFEXITED(status))
+    printf("wstatus: ");
+    if (WIFEXITED(wstatus))
     {
-        printf("exited: %d", WEXITSTATUS(status));
+        printf("exited: %d", WEXITSTATUS(wstatus));
     }
 
-    if (WIFSIGNALED(status))
+    if (WIFSIGNALED(wstatus))
     {
-        printf("signaled: %d: ", WTERMSIG(status));
-        if (WCOREDUMP(status))
+        printf("signaled: %d: ", WTERMSIG(wstatus));
+        if (WCOREDUMP(wstatus))
         {
             printf("core dump");
         }
@@ -24,25 +24,23 @@ void check_status(int status)
         }
     }
 
-    if (WIFSTOPPED(status))
+    if (WIFSTOPPED(wstatus))
     {
-        printf("stopped: %d", WSTOPSIG(status));
+        printf("stopped: %d", WSTOPSIG(wstatus));
+    }
+
+    if (WIFCONTINUED(wstatus))
+    {
+        printf("continued: ");
     }
     printf("\n");
 }
-
-#define ERR( msg, pid ) do { \
-                          fprintf( stderr, "%s: %s (errno = %d)\n", \
-                            msg, strerror( errno ), errno ); \
-                          waitpid( pid, NULL, 0 ); \
-                          return 1; \
-                        } while( 0 );
 
 int main(int argc, char *argv[], char *env[])
 {
     char    *command[] = {"./pause", NULL};
     pid_t   child_pid;
-    int     status;
+    int     wstatus;
 
     child_pid = fork();
     if (child_pid == -1)
@@ -53,7 +51,7 @@ int main(int argc, char *argv[], char *env[])
     else if (child_pid == 0)
     {
         errno = 0;
-        ptrace(PT_TRACE_ME, 0, 0, 0);
+        ptrace(PTRACE_TRACEME, 0, 0, 0);
         if (errno)
         {
             perror("child: ptrace");
@@ -66,16 +64,16 @@ int main(int argc, char *argv[], char *env[])
     else
     {
         errno = 0;
-        wait4(child_pid, &status, WUNTRACED, NULL);
+        wait4(child_pid, &wstatus, WUNTRACED, NULL);
         if (errno)
         {
             perror("parent: wait4");
             exit(-1);
         }
-        check_status(status);
+        check_wstatus(wstatus);
         errno = 0;
         // printf("parent: before ptrace\n");
-        ptrace(PT_ATTACHEXC, child_pid, 0, 0);
+        ptrace(PTRACE_ATTACH, child_pid, 0, 0);
         if (errno)
         {
             perror("parent: ptrace");
