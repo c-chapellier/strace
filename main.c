@@ -36,11 +36,49 @@ void check_wstatus(int wstatus)
     printf("\n");
 }
 
+char *syscall_str(int syscall)
+{
+	switch (syscall)
+	{
+		case 0:
+			return ("read");
+		case 1:
+			return ("write");
+		case 2:
+			return ("open");
+		case 3:
+			return ("close");
+		case 4:
+			return ("stat");
+		case 5:
+			return ("fstat");
+		case 6:
+			return ("lstat");
+		case 7:
+			return ("poll");
+		case 8:
+			return ("lseek");
+		case 9:
+			return ("mmap");
+		case 10:
+			return ("mprotect");
+		case 11:
+			return ("munmap");
+		case 12:
+			return ("brk");
+		default:
+			return ("Unknow");
+	}
+}
+
 int main(int argc, char *argv[], char *env[])
 {
-    char    *command[] = {"./pause", NULL};
-    pid_t   child_pid;
-    int     wstatus;
+	pid_t   child_pid;
+	int     wstatus;
+
+	struct user_regs_struct regs;
+ 	int counter = 0;
+ 	int in_call =0;
 
     child_pid = fork();
     if (child_pid == -1)
@@ -50,7 +88,7 @@ int main(int argc, char *argv[], char *env[])
     }
     else if (child_pid == 0)
     {
-        errno = 0;
+		errno = 0;
         ptrace(PTRACE_TRACEME, 0, 0, 0);
         if (errno)
         {
@@ -58,28 +96,40 @@ int main(int argc, char *argv[], char *env[])
             exit(-1);
         }
         // printf("child: before execve\n");
-        execve(command[0], command, env);
+        execve(argv[1], &argv[1], env);
         printf("child: return\n");
     }
     else
     {
-        errno = 0;
-        wait4(child_pid, &wstatus, WUNTRACED, NULL);
-        if (errno)
+		errno = 0;
+		wait(&wstatus);
+		if (errno)
         {
             perror("parent: wait4");
             exit(-1);
         }
         check_wstatus(wstatus);
+		while (wstatus == 1407)
+		{
+			ptrace(PTRACE_GETREGS, child_pid, NULL, &regs);
+			if (!in_call)
+			{
+				printf("Syscall %s:\n", syscall_str(regs.orig_rax));
+				printf("\trax: %ld\n", regs.rbx);
+				printf("\trbx: %ld\n", regs.rcx);
+				printf("\trdx: %ld\n", regs.rdx);
+				in_call = 1;
+				++counter;
+			}
+			else
+			{
+				in_call = 0;
+			}
+			ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL); 
+			wait(&wstatus); 
+		}
         errno = 0;
-        // printf("parent: before ptrace\n");
-        ptrace(PTRACE_ATTACH, child_pid, 0, 0);
-        if (errno)
-        {
-            perror("parent: ptrace");
-            exit(-1);
-        }
-        printf("parent: return\n");
+		printf("Syscalls number = %d\n", counter);
     }
     return (0);
 }

@@ -10,5 +10,6 @@
 #include <sys/ptrace.h>
 #include <signal.h>
 #include <errno.h>
+#include <sys/user.h>
 
 #endif
