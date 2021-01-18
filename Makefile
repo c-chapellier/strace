@@ -1,4 +1,4 @@
-SRCS = main.c						
+SRCS = main.c		
 
 OBJS = ${SRCS:.c=.o}
 

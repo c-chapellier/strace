@@ -36,49 +36,114 @@ void check_wstatus(int wstatus)
     printf("\n");
 }
 
-char *syscall_str(int syscall)
+char *syscall_str(syscall_table_t syscall_table, int syscall_number)
 {
-	switch (syscall)
+	int	i = 0;
+
+	while (i < syscall_table.size)
 	{
-		case 0:
-			return ("read");
-		case 1:
-			return ("write");
-		case 2:
-			return ("open");
-		case 3:
-			return ("close");
-		case 4:
-			return ("stat");
-		case 5:
-			return ("fstat");
-		case 6:
-			return ("lstat");
-		case 7:
-			return ("poll");
-		case 8:
-			return ("lseek");
-		case 9:
-			return ("mmap");
-		case 10:
-			return ("mprotect");
-		case 11:
-			return ("munmap");
-		case 12:
-			return ("brk");
-		default:
-			return ("Unknow");
+		if (syscall_table.value[i] == syscall_number)
+			return (syscall_table.str[i]);
+		++i;
+	}
+	return ("Unknow");
+}
+
+int	alloc_syscall_table(syscall_table_t *syscall_table, const char *filename)
+{
+	FILE	*fp;
+    char	*line = NULL;
+    size_t	len = 0;
+	int		i = 0;
+
+    if ((fp = fopen(filename, "r")) == NULL)
+		return (-1);
+
+    while (getline(&line, &len, fp) != -1)
+	{
+		++i;
+    }
+	syscall_table->size = i;
+
+    fclose(fp);
+    if (line)
+        free(line);
+
+	if ((syscall_table->str = malloc(syscall_table->size * sizeof(char *))) == NULL)
+		return (-1);
+	if ((syscall_table->value = malloc(syscall_table->size * sizeof(int))) == NULL)
+	{
+		free(syscall_table->str);
+		return (-1);
+	}
+	return (0);
+}
+
+int	get_syscall_table(syscall_table_t *syscall_table, const char *filename)
+{
+	FILE	*fp;
+    char	*line = NULL;
+    size_t	len = 0;
+	int		i = 0;
+	char	**split;
+
+	if (alloc_syscall_table(syscall_table, filename) == -1)
+		return (-1);
+    if ((fp = fopen(filename, "r")) == NULL)
+		return (-1);
+    while (getline(&line, &len, fp) != -1)
+	{
+		strtok(line, " \t");
+   		syscall_table->str[i] = strdup(strtok(NULL, " \t"));
+		//printf("str = %s\n", syscall_table->str[i]); 
+		syscall_table->value[i] = atoi(strtok(NULL, " \t"));
+		//printf("value = %d\n", syscall_table->value[i]);
+		++i;
+    }
+	syscall_table->size = i;
+    fclose(fp);
+    if (line)
+        free(line);
+	return (0);
+}
+
+void free_syscall_table(syscall_table_t syscall_table)
+{
+	int i = 0;
+
+	while (i < syscall_table.size)
+	{
+		free(syscall_table.str[i]);
+		++i;
+	}
+	free(syscall_table.str);
+	free(syscall_table.value);
+}
+
+void	print_str_from_child_addr(pid_t child_pid, unsigned long addr)
+{
+	char word = '1';
+	
+	while (word != '\0')
+	{
+		word = ptrace(PTRACE_PEEKTEXT, child_pid, addr, NULL);
+		++addr;
+		printf("%c", word);
 	}
 }
 
 int main(int argc, char *argv[], char *env[])
 {
 	pid_t   child_pid;
+	syscall_table_t	syscall_table;
 	int     wstatus;
 
 	struct user_regs_struct regs;
  	int counter = 0;
- 	int in_call =0;
+ 	int in_call = 0;
+
+	if (get_syscall_table(&syscall_table, "./syscall.h") == -1)
+		return (-1);
 
     child_pid = fork();
     if (child_pid == -1)
@@ -114,15 +179,22 @@ int main(int argc, char *argv[], char *env[])
 			ptrace(PTRACE_GETREGS, child_pid, NULL, &regs);
 			if (!in_call)
 			{
-				printf("Syscall %s:\n", syscall_str(regs.orig_rax));
-				printf("\trax: %ld\n", regs.rbx);
-				printf("\trbx: %ld\n", regs.rcx);
-				printf("\trdx: %ld\n", regs.rdx);
+				printf("%s(", syscall_str(syscall_table, regs.orig_rax));
+				if (regs.orig_rax == 6)
+				{
+					print_str_from_child_addr(child_pid, regs.rdi);
+				}
+				else
+					printf("%ld", regs.rdi);
+				printf(", %ld", regs.rsi);
+				printf(", %ld", regs.rdx);
+				printf(")");
 				in_call = 1;
 				++counter;
 			}
 			else
 			{
+				printf(" = %ld\n", regs.orig_rax);
 				in_call = 0;
 			}
 			ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL); 
@@ -131,5 +203,6 @@ int main(int argc, char *argv[], char *env[])
         errno = 0;
 		printf("Syscalls number = %d\n", counter);
     }
+	free_syscall_table(syscall_table);
     return (0);
 }
