@@ -40,25 +40,50 @@ void	print_str_from_child_addr(pid_t child_pid, unsigned long addr)
 {
 	char word = '1';
 	
+	if (addr == 0)
+	{
+		printf("\"(null)\"");
+		return ;
+	}
+	printf("\"");
 	while (word != '\0')
 	{
 		word = ptrace(PTRACE_PEEKTEXT, child_pid, addr, NULL);
 		++addr;
 		printf("%c", word);
 	}
+	printf("\"");
+}
+
+void print_reg(pid_t child_pid, unsigned long reg, unsigned int type)
+{
+	if (type == STRING)
+	{
+		print_str_from_child_addr(child_pid, reg);
+	}
+	else
+	{
+		printf("%ld", reg);
+	}
 }
 
 void print_regs(pid_t child_pid, struct user_regs_struct regs)
 {
     printf("%s(", syscall_table[regs.orig_rax].name);
-    if (regs.orig_rax == 6)
-    {
-        print_str_from_child_addr(child_pid, regs.rdi);
-    }
-    else
-        printf("%ld", regs.rdi);
-    printf(", %ld", regs.rsi);
-    printf(", %ld", regs.rdx);
+	if (syscall_table[regs.orig_rax].rdi != NONE)
+	{
+   		print_reg(child_pid, regs.rdi, syscall_table[regs.orig_rax].rdi);
+	}
+	if (syscall_table[regs.orig_rax].rsi != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.rsi, syscall_table[regs.orig_rax].rsi);
+	}
+	if (syscall_table[regs.orig_rax].rdx != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.rdx, syscall_table[regs.orig_rax].rdx);
+	}
     printf(")");
 }
 
@@ -66,7 +91,6 @@ void parent(pid_t child_pid)
 {
     int                     wstatus;
 	struct user_regs_struct regs;
- 	int                     counter = 0;
  	int                     in_call = 0;
 
     errno = 0;
@@ -84,7 +108,6 @@ void parent(pid_t child_pid)
         {
             print_regs(child_pid, regs);
 			in_call = 1;
-			++counter;
 		}
 		else
 		{
@@ -95,7 +118,6 @@ void parent(pid_t child_pid)
         wait(&wstatus); 
     }
     errno = 0;
-    printf("nbr of syscalls = %d\n", counter);
 }
 
 void child(char *argv[], char *env[])
