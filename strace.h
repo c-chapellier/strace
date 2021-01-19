@@ -8,14 +8,18 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
+#include <linux/ptrace.h>
 #include <signal.h>
 #include <errno.h>
 #include <sys/user.h>
 
-#define PTR		0
-#define STRING	1
-#define NUMBER	2
-#define NONE	3
+#define PTR			0
+#define STRING		1
+#define STRING_TAB	2
+#define NUMBER		3
+#define NONE		4
+
+#define MAX_SYSCALL 328
 
 typedef struct	s_syscall
 {
@@ -92,7 +96,7 @@ const syscall_t	syscall_table[330] =
 	{"clone", 56, NUMBER, NUMBER, PTR, PTR, NONE, NONE},
 	{"fork", 57, NONE, NONE, NONE, NONE, NONE, NONE},
 	{"vfork", 58, NONE, NONE, NONE, NONE, NONE, NONE},
-	{"execve", 59, STRING, PTR, PTR, NONE, NONE, NONE},
+	{"execve", 59, STRING, STRING_TAB, STRING_TAB, NONE, NONE, NONE},
 	{"exit", 60, NUMBER, NONE, NONE, NONE, NONE, NONE},
 	{"wait4", 61, NUMBER, PTR, NUMBER, PTR, NONE, NONE},
 	{"kill", 62, NUMBER, NUMBER, NONE, NONE, NONE, NONE},
