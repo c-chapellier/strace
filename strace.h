@@ -31,9 +31,9 @@ typedef struct	s_syscall
 	uint8_t		r10;
 	uint8_t		r8;
 	uint8_t		r9;
-	//uint8_t	rax;
 }				syscall_t;
 
+void	print_syscall(pid_t child_pid, struct user_regs_struct regs);
 
 const syscall_t	syscall_table[330] =
 {
