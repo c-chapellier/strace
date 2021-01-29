@@ -49,7 +49,7 @@ static void print_ptr(void *ptr)
 	}
 }
 
-static void	get_str_tab_from_child(pid_t child_pid, unsigned long addr) // maybe just try with str_from_child
+static char	**get_str_tab_from_child(pid_t child_pid, unsigned long addr) // maybe just try with str_from_child
 {
 	char	**str_tab;
 	char	**tmp = (char **)addr;
@@ -57,28 +57,33 @@ static void	get_str_tab_from_child(pid_t child_pid, unsigned long addr) // maybe
 	
 	if (addr == 0)
 	{
-		printf("\"(null)\"");
-		return ;
+		printf("(null)");
+		return (NULL);
 	}
 	if ((str_tab = malloc(size * sizeof(char *))) == NULL)
 	{
 		printf("malloc error");
 		return (NULL);
 	}
-	str_tab[0] = get_str_from_child_addr(child_pid, (unsigned long)tmp[0]);
+	str_tab[0] = get_str_from_child(child_pid, (unsigned long)tmp[0]);
 	while (str_tab[i] != NULL && i < size - 1)
 	{
 		++i;
-		str_tab[i] = get_str_from_child_addr(child_pid, (unsigned long)tmp[i]);
+		str_tab[i] = get_str_from_child(child_pid, (unsigned long)tmp[i]);
 	}
 	str_tab[i] = NULL;
 	return (str_tab);
 }
 
-static void	print_str_tab(char **str_tab, unsigned long addr)
+static void	print_str_tab_from_child(pid_t child_pid, unsigned long addr)
 {
 	int i = 0;
+	char	**str_tab = get_str_tab_from_child(child_pid, addr);
 
+	if (str_tab == NULL)
+	{
+		return ;
+	}
 	while (str_tab[i] != NULL)
 	{
 		++i;
@@ -146,6 +151,17 @@ static void print_reg(pid_t child_pid, unsigned long reg, unsigned int type)
 	}
 }
 
+void		print_rax(unsigned long rax)
+{
+	printf(") = %ld", rax);
+	if ((long)rax < 0)
+	{
+		unsigned long tracee_errno = 0xFFFFFFFFFFFFFFFF - rax + 1;
+		printf(" %ld (%s)", tracee_errno, strerror(tracee_errno));
+	}
+	printf("\n");
+}
+
 static void print_know_syscall(pid_t child_pid, struct user_regs_struct regs)
 {
     printf("%s(", syscall_table[regs.orig_rax].name);
@@ -164,19 +180,19 @@ static void print_know_syscall(pid_t child_pid, struct user_regs_struct regs)
 		print_reg(child_pid, regs.rdx, syscall_table[regs.orig_rax].rdx);
 	}
 	//printf(")");
-	printf(") = %ld\n", regs.rax);
+	//print_rax(regs.rax);
 }
 
 static void print_unknow_syscall(pid_t child_pid, struct user_regs_struct regs)
 {
-    printf("unknow(");
+    printf("syscall_%lx(", regs.orig_rax);
    	print_reg(child_pid, regs.rdi, NUMBER);
 	printf(", ");
 	print_reg(child_pid, regs.rsi, NUMBER);
 	printf(", ");
 	print_reg(child_pid, regs.rdx, NUMBER);
 	//printf(")");
-	printf(") = %ld\n", regs.rax);
+	//print_rax(regs.rax);
 }
 
 void    print_syscall(pid_t child_pid, struct user_regs_struct regs)

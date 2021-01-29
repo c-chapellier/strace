@@ -70,19 +70,41 @@ void print_syscall_info(struct ptrace_syscall_info syscall_info)
 	printf("--------------------------------------\n");
 }
 
+#ifdef __x86_64__
+#define SC_NUMBER  (8 * ORIG_RAX)
+#define SC_RETCODE (8 * RAX)
+#else
+#define SC_NUMBER  (4 * ORIG_EAX)
+#define SC_RETCODE (4 * EAX)
+#endif
+
 void parent(pid_t child_pid)
 {
+	long sc_number, sc_retcode;
     int                         wstatus;
 	struct user_regs_struct     regs;
 	struct ptrace_syscall_info  syscall_info;
  	int                         in_call = 0;
 
-    wait(&wstatus);
-	ptrace(PTRACE_SETOPTIONS, child_pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXEC | PTRACE_O_TRACEEXIT);
-	ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+	usleep(1000);
+	printf("1\n");
+    //wait(&wstatus);
+	printf("2\n");
+	ptrace(PTRACE_SEIZE, child_pid, 0,	PTRACE_O_TRACESYSGOOD |
+										PTRACE_O_TRACEEXEC |
+										PTRACE_O_TRACEEXIT
+									);
+	kill(child_pid, SIGCONT);
+	//ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+	printf("before wait\n");
 	wait(&wstatus);
+	printf("after wait\n");
     while (WIFSTOPPED(wstatus))
     {
+		//sc_number = ptrace(PTRACE_PEEKUSER, child_pid, SC_NUMBER, NULL);
+        //sc_retcode = ptrace(PTRACE_PEEKUSER, child_pid, SC_RETCODE, NULL);
+        //printf("SIGTRAP: syscall %ld, rc = %ld\n", sc_number, sc_retcode);
+
 		//errno = 0;
 		//long ret = ptrace(PTRACE_GET_SYSCALL_INFO, child_pid, sizeof(struct ptrace_syscall_info), &syscall_info);
 		//if (errno)
@@ -91,29 +113,33 @@ void parent(pid_t child_pid)
 		//}
 		//printf("ret = %ld\n", ret);
 		//print_syscall_info(syscall_info);
+
 		siginfo_t sig;
-		
 		ptrace(PTRACE_GETSIGINFO, child_pid, NULL, &sig);
+        ptrace(PTRACE_GETREGS, child_pid, NULL, &regs);
 		if (sig.si_code & 0x80)
 		{
-			//printf("in a syscall\n");
+			print_syscall(child_pid, regs);
+			printf("\n");
 		}
 		else
 		{
-			//printf("not in a syscall\n");
+			printf("-----------------");
+			print_rax(regs.rax);
+			//printf(" = %ld\n", regs.rax);
 		}
 
-        ptrace(PTRACE_GETREGS, child_pid, NULL, &regs);
-        if (!in_call)
-        {
-            print_syscall(child_pid, regs);
-			in_call = 1;
-		}
-		else
-		{
-			//printf(" = %ld\n", regs.rax);
-			in_call = 0;
-        }
+        //if (!in_call)
+        //{
+        //    printf("in a syscall\n");
+		//	in_call = 1;
+		//}
+		//else
+		//{
+		//	printf("not in a syscall\n");
+		//	in_call = 0;
+        //}
+
 		if (wstatus >> 8  == (SIGTRAP | (PTRACE_EVENT_EXIT << 8))) // exit
 		{
 			unsigned long exit_value;
@@ -126,25 +152,33 @@ void parent(pid_t child_pid)
     errno = 0;
 }
 
-void child(char *argv[], char *env[])
+void child(char *argv[])
 {
     errno = 0;
-    ptrace(PTRACE_TRACEME, 0, 0, 0);
-    if (errno)
-    {
-        perror("child: ptrace");
-        exit(-1);
-    }
+    //ptrace(PTRACE_TRACEME, 0, 0, 0);
+    //if (errno)
+    //{
+    //    perror("child: ptrace");
+    //    exit(-1);
+    //}
+	printf("before stop\n");
 	raise(SIGSTOP);
-    execve(argv[1], &argv[1], env);
+	printf("after stop\n");
+    execve(argv[1], &argv[1], environ);
 	//system(argv[1]);
-    printf("child: return\n");
+	perror("execve: ");
+	exit(-1);
 }
 
-int main(int argc, char *argv[], char *env[])
+int main(int argc, char *argv[])
 {
 	pid_t   child_pid;
 
+	if (argc < 2)
+	{
+		printf("usage: PROG [ARGS]\n");
+		return (-1);
+	}
     child_pid = fork();
     if (child_pid == -1)
     {
@@ -153,7 +187,7 @@ int main(int argc, char *argv[], char *env[])
     }
     else if (child_pid == 0)
     {
-		child(argv, env);
+		child(argv);
     }
     else
     {

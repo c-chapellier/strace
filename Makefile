@@ -1,4 +1,6 @@
-SRCS = main.c		
+SRCS =	main.c \
+		syscall_table.c \
+		print_syscall.c
 
 OBJS = ${SRCS:.c=.o}
 
