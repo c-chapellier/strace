@@ -331,5 +331,5 @@ const syscall_t	syscall_table[330] =
 	{"copy_file_range", 326, NUMBER, PTR, NUMBER, PTR, NUMBER, NUMBER},
 	{"preadv2", 327, NUMBER, PTR, NUMBER, NUMBER, NUMBER, NUMBER},
 	{"pwritev2", 328, NUMBER, PTR, NUMBER, NUMBER, NUMBER, NUMBER},
-	{NULL, NONE, NONE, NONE, NONE, NONE, NONE, NONE}
+	{NULL, -1, NONE, NONE, NONE, NONE, NONE, NONE}
 };
