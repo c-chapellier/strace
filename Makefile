@@ -1,7 +1,8 @@
 SRCS =	main.c \
 		syscall_table.c \
 		print_syscall.c \
-		color_table.c
+		color_table.c \
+		ft_errno.c
 
 OBJS = ${SRCS:.c=.o}
 

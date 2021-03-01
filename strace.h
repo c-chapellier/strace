@@ -34,11 +34,22 @@ typedef struct	s_syscall
 	uint8_t		r9;
 }				syscall_t;
 
+typedef struct	s_ft_errno
+{
+	char		*name;
+	int			value;
+	char		*interpretation;
+}				ft_errno_t;
+
 void	print_rax(unsigned long rax);
 void	print_syscall(pid_t child_pid, struct user_regs_struct regs);
+
+char    *ft_strerror(int errnum);
+void    ft_perror(const char *s);
 
 extern char				**environ;
 extern const syscall_t	syscall_table[330];
 extern const char		*color_table[];
+extern const ft_errno_t	errno_table[125];
 
 #endif
