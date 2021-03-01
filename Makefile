@@ -12,7 +12,7 @@ NAME = ft_strace
 all :		${NAME}
 
 ${NAME} :	${OBJS}
-			gcc -o ${NAME} ${OBJS} -pthread
+			gcc -o ${NAME} ${OBJS}
 
 clean :
 			rm -f ${OBJS}
