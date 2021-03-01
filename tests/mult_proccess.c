@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 int main()
 {
@@ -13,7 +14,7 @@ int main()
 	else
 	{
 		wait(NULL);
-		write(1, "parent\n", 7);
+		write(1, "\t\tpar \v\f  ent\n", 7);
 	}
 	return (0);
 }

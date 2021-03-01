@@ -33,7 +33,23 @@ static void print_str(const char *str)
 	}
 	else
 	{
-		printf("\"%s\"", str);
+		int i = 0;
+
+		printf("\"");
+		while (str[i] != '\0')
+		{
+			switch 
+			if (str[i] == '\n')
+			{
+				printf("\\n");
+			}
+			else
+			{
+				printf("%c", str[i]);
+			}
+			++i;
+		}
+		printf("\"");
 	}
 }
 
@@ -205,4 +221,5 @@ void    print_syscall(pid_t child_pid, struct user_regs_struct regs)
 	{
 		print_know_syscall(child_pid, regs);
 	}
+	fflush(stdout);
 }
