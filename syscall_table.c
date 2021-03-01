@@ -61,7 +61,7 @@ const syscall_t	syscall_table[330] =
 	{"clone", 56, NUMBER, NUMBER, PTR, PTR, NONE, NONE},
 	{"fork", 57, NONE, NONE, NONE, NONE, NONE, NONE},
 	{"vfork", 58, NONE, NONE, NONE, NONE, NONE, NONE},
-	{"\033[32;1mexecve\033[0m", 59, STRING, STRING_TAB, STRING_TAB, NONE, NONE, NONE},
+	{"execve", 59, STRING, STRING_TAB, STRING_TAB, NONE, NONE, NONE},
 	{"exit", 60, NUMBER, NONE, NONE, NONE, NONE, NONE},
 	{"wait4", 61, NUMBER, PTR, NUMBER, PTR, NONE, NONE},
 	{"kill", 62, NUMBER, NUMBER, NONE, NONE, NONE, NONE},

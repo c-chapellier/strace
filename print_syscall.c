@@ -38,14 +38,26 @@ static void print_str(const char *str)
 		printf("\"");
 		while (str[i] != '\0')
 		{
-			switch 
-			if (str[i] == '\n')
+			switch (str[i])
 			{
-				printf("\\n");
-			}
-			else
-			{
-				printf("%c", str[i]);
+				case '\n':
+					printf("\\n");
+					break ;
+				case '\t':
+					printf("\\t");
+					break ;
+				case '\v':
+					printf("\\v");
+					break ;
+				case '\r':
+					printf("\\r");
+					break ;
+				case '\f':
+					printf("\\f");
+					break ;
+				default:
+					printf("%c", str[i]);
+					break ;
 			}
 			++i;
 		}
@@ -180,7 +192,24 @@ void		print_rax(unsigned long rax)
 
 static void print_know_syscall(pid_t child_pid, struct user_regs_struct regs)
 {
-    printf("%s(", syscall_table[regs.orig_rax].name);
+	static int	i = 0;
+	static int	last_syscall = -1;
+
+	if (regs.orig_rax != last_syscall)
+	{
+		++i;
+		if (color_table[i] == NULL)
+		{
+			i = 0;
+		}
+	}
+	printf("%s", color_table[i]);
+    printf("%s", syscall_table[regs.orig_rax].name);
+	printf("\e[0m");
+
+	last_syscall = regs.orig_rax;
+
+	printf("(");
 	if (syscall_table[regs.orig_rax].rdi != NONE)
 	{
    		print_reg(child_pid, regs.rdi, syscall_table[regs.orig_rax].rdi);
@@ -195,8 +224,21 @@ static void print_know_syscall(pid_t child_pid, struct user_regs_struct regs)
 		printf(", ");
 		print_reg(child_pid, regs.rdx, syscall_table[regs.orig_rax].rdx);
 	}
-	//printf(")");
-	//print_rax(regs.rax);
+	if (syscall_table[regs.orig_rax].r10 != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.r10, syscall_table[regs.orig_rax].rdx);
+	}
+	if (syscall_table[regs.orig_rax].r8 != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.r8, syscall_table[regs.orig_rax].rdx);
+	}
+	if (syscall_table[regs.orig_rax].r9 != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.r9, syscall_table[regs.orig_rax].rdx);
+	}
 }
 
 static void print_unknow_syscall(pid_t child_pid, struct user_regs_struct regs)
@@ -207,8 +249,12 @@ static void print_unknow_syscall(pid_t child_pid, struct user_regs_struct regs)
 	print_reg(child_pid, regs.rsi, NUMBER);
 	printf(", ");
 	print_reg(child_pid, regs.rdx, NUMBER);
-	//printf(")");
-	//print_rax(regs.rax);
+	printf(", ");
+	print_reg(child_pid, regs.r10, NUMBER);
+	printf(", ");
+	print_reg(child_pid, regs.r8, NUMBER);
+	printf(", ");
+	print_reg(child_pid, regs.r9, NUMBER);
 }
 
 void    print_syscall(pid_t child_pid, struct user_regs_struct regs)

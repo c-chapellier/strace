@@ -1,24 +1,9 @@
 #include "strace.h"
-#include "pthread.h"
-
-// long ptrace(enum __ptrace_request request, pid_t pid, void *addr, void *data);
-// pid_t wait4(pid_t pid, int *wstatus, int options, struct rusage *rusage);
-
-#ifdef __x86_64__
-#define SC_NUMBER  (8 * ORIG_RAX)
-#define SC_RETCODE (8 * RAX)
-#else
-#define SC_NUMBER  (4 * ORIG_EAX)
-#define SC_RETCODE (4 * EAX)
-#endif
 
 void parent(pid_t child_pid)
 {
-	long sc_number, sc_retcode;
     int                         wstatus;
 	struct user_regs_struct     regs;
-	struct ptrace_syscall_info  syscall_info;
- 	int                         in_call = 0;
 	int							is_in_execve = 0;
 
 	ptrace(PTRACE_SEIZE, child_pid, 0,	PTRACE_O_TRACESYSGOOD |
@@ -81,12 +66,12 @@ int main(int argc, char *argv[])
 	if (argc < 2)
 	{
 		printf("usage: PROG [ARGS]\n");
-		return (-1);
+		exit(-1);
 	}
     child_pid = fork();
     if (child_pid == -1)
     {
-        perror("fork: ");
+        perror("fork");
         exit(-1);
     }
     else if (child_pid == 0)

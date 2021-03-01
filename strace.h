@@ -39,5 +39,6 @@ void	print_syscall(pid_t child_pid, struct user_regs_struct regs);
 
 extern char				**environ;
 extern const syscall_t	syscall_table[330];
+extern const char		*color_table[];
 
 #endif
