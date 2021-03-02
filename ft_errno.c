@@ -1,7 +1,9 @@
 #include "strace.h"
 
-const ft_errno_t    errno_table[125] =
+const ft_errno_t    errno_table[127] =
 {
+    {NULL, -1, "Unknown error"},
+    {NULL, 0, "Undefined error: 0"},
     {"EPERM", 1, "Operation not permitted"},
     {"ENOENT", 2, "No such file or directory"},
     {"ESRCH", 3, "No such process"},
@@ -131,16 +133,20 @@ const ft_errno_t    errno_table[125] =
 
 char    *ft_strerror(int errnum)
 {
-    if (errnum <= 0)
+    if (errnum < 0)
     {
-        return (NULL);
+        return (strdup(errno_table[0].interpretation));
     }
-    return (strdup(errno_table[errnum - 1].interpretation));
+    return (strdup(errno_table[errnum + 1].interpretation));
 }
 
 void    ft_perror(const char *s)
 {
     char    *msg = ft_strerror(errno);
-    printf("%s : %s", s, msg);
+    if (s != NULL)
+    {
+        printf("%s: ", s);
+    }
+    printf("%s\n", msg);
     free(msg);
 }

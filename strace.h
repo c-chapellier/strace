@@ -50,6 +50,6 @@ void    ft_perror(const char *s);
 extern char				**environ;
 extern const syscall_t	syscall_table[330];
 extern const char		*color_table[];
-extern const ft_errno_t	errno_table[125];
+extern const ft_errno_t	errno_table[127];
 
 #endif
