@@ -110,6 +110,18 @@ static char	**get_str_tab_from_child(pid_t child_pid, unsigned long addr) // may
 	return (str_tab);
 }
 
+static void free_2d(void **array)
+{
+	int i = 0;
+
+	while (array[i] != NULL)
+	{
+		free(array[i]);
+		++i;
+	}
+	free(array);
+}
+
 static void	print_str_tab_from_child(pid_t child_pid, unsigned long addr)
 {
 	int i = 0;
@@ -143,18 +155,7 @@ static void	print_str_tab_from_child(pid_t child_pid, unsigned long addr)
 		}
 		printf("]");
 	}
-}
-
-static void free_2d(void **array)
-{
-	int i = 0;
-
-	while (array[i] != NULL)
-	{
-		free(array[i]);
-		++i;
-	}
-	free(array);
+	free_2d((void **)str_tab);
 }
 
 static void print_str_from_child(pid_t child_pid, unsigned long reg)
@@ -201,8 +202,8 @@ void		print_rax(unsigned long rax)
 
 static void print_know_syscall(pid_t child_pid, struct user_regs_struct regs)
 {
-	static int	i = 0;
-	static int	last_syscall = -1;
+	static int				i = 0;
+	static unsigned long	last_syscall = -1;
 
 	if (regs.orig_rax != last_syscall)
 	{

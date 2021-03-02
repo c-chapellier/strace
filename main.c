@@ -17,7 +17,7 @@ void parent(pid_t child_pid)
 		{
 			unsigned long exit_value;
 			ptrace(PTRACE_GETEVENTMSG, child_pid, NULL, &exit_value);
-			printf(") = ?\n+++ exited with %lu +++\n", exit_value);
+			printf(") = ?\n+++ exited with %lu +++\n", exit_value / 256);
 			break;
 		}
 
@@ -27,14 +27,14 @@ void parent(pid_t child_pid)
 		{
         	ptrace(PTRACE_GETREGS, child_pid, NULL, &regs);
 
-			if (regs.rax == -ENOSYS && regs.orig_rax == 59)	// if execve is called
+			if ((int)regs.rax == -ENOSYS && regs.orig_rax == 59)	// if execve is called
 			{
 				is_in_execve = 1;
 			}
 
 			if (is_in_execve)	// display only syscalls of called program (after execve)
 			{
-				if (regs.rax == -ENOSYS)	// in a syscall
+				if ((int)regs.rax == -ENOSYS)	// in a syscall
 				{
 					print_syscall(child_pid, regs);
 				}
@@ -55,7 +55,7 @@ void child(char *argv[])
 	raise(SIGSTOP);
     execve(argv[1], &argv[1], environ);
 	//system(argv[1]);
-	exit(-1);
+	exit(1);
 }
 
 int main(int argc, char *argv[])
