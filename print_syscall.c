@@ -36,7 +36,7 @@ static void print_str(const char *str)
 		int i = 0;
 
 		printf("\"");
-		while (str[i] != '\0')
+		while (str[i] != '\0' && i < 32)
 		{
 			switch (str[i])
 			{
@@ -55,6 +55,9 @@ static void print_str(const char *str)
 				case '\f':
 					printf("\\f");
 					break ;
+				case '\"':
+					printf("\\\"");
+					break ;
 				default:
 					printf("%c", str[i]);
 					break ;
@@ -62,6 +65,10 @@ static void print_str(const char *str)
 			++i;
 		}
 		printf("\"");
+		if (str[i] != '\0')
+		{
+			printf("...");
+		}
 	}
 }
 
@@ -184,8 +191,10 @@ void		print_rax(unsigned long rax)
 	printf(") = %ld", rax);
 	if ((long)rax < 0)
 	{
+		printf("%s", color_table[RED]);
 		unsigned long tracee_errno = 0xFFFFFFFFFFFFFFFF - rax + 1;
-		printf(" %ld (%s)", tracee_errno, strerror(tracee_errno));
+		printf(" %s (%s)", ft_errno_name(tracee_errno), ft_strerror(tracee_errno));
+		printf("%s", RESET);
 	}
 	printf("\n");
 }

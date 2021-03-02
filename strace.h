@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
 #include <linux/ptrace.h>
@@ -46,6 +47,7 @@ void	print_syscall(pid_t child_pid, struct user_regs_struct regs);
 
 char    *ft_strerror(int errnum);
 void    ft_perror(const char *s);
+char	*ft_errno_name(int errnum);
 
 extern char				**environ;
 extern const syscall_t	syscall_table[330];

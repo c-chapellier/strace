@@ -51,11 +51,10 @@ void parent(pid_t child_pid)
 }
 
 void child(char *argv[])
-{
+{	
 	raise(SIGSTOP);
     execve(argv[1], &argv[1], environ);
 	//system(argv[1]);
-	perror("execve");
 	exit(-1);
 }
 
@@ -68,6 +67,14 @@ int main(int argc, char *argv[])
 		printf("usage: PROG [ARGS]\n");
 		exit(-1);
 	}
+
+	struct stat	buffer;
+  	if (stat(argv[1], &buffer) == -1)
+	{
+		printf("ft_strace: Can't stat '%s': No such file or directory\n", argv[1]);
+		exit(-1);
+	}
+
     child_pid = fork();
     if (child_pid == -1)
     {
