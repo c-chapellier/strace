@@ -33,7 +33,7 @@ void parent(pid_t child_pid)
 				is_in_execve = 1;
 			}
 
-			if (!is_brk_checked && regs.rax == -ENOSYS && (regs.orig_rax == 12 || regs.orig_rax == 45))
+			if (!is_brk_checked && (int)regs.rax == -ENOSYS && (regs.orig_rax == 12 || regs.orig_rax == 45))
 			{
 				if (regs.orig_rax == 45)
 				{

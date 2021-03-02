@@ -253,8 +253,8 @@ static void print_know_syscall_64(pid_t child_pid, struct user_regs_struct regs)
 
 static void print_know_syscall_32(pid_t child_pid, struct user_regs_struct regs)
 {
-	static int	i = 0;
-	static int	last_syscall = -1;
+	static int		i = 0;
+	static unsigned long	last_syscall = -1;
 
 	if (regs.orig_rax != last_syscall)
 	{

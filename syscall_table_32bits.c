@@ -373,7 +373,7 @@ const syscall_t	syscall_table_32[386] =
     {"setsockopt", 366, NUMBER, NUMBER, NUMBER, STRING, NUMBER, NONE},
     {"getsockname", 367, NUMBER, PTR, PTR, NONE, NONE, NONE},
     {"getpeername", 368, NUMBER, PTR, PTR, NONE, NONE, NONE},
-    {"sendto", 369, NUMBER, PTR, NUMBER, PTR, NUMBER},
+    {"sendto", 369, NUMBER, PTR, NUMBER, NUMBER, PTR, NUMBER},
     {"sendmsg", 370, NUMBER, PTR, NUMBER, NONE, NONE, NONE},
     {"recvfrom", 371, NUMBER, PTR, NUMBER, NUMBER, PTR, PTR},
     {"recvmsg", 372, NUMBER, PTR, NUMBER, NONE, NONE, NONE},
