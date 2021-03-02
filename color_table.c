@@ -1,13 +1,5 @@
 #include "strace.h"
 
-#define RED 0
-#define GREEN 1
-#define BROWN 2
-#define BLUE 3
-#define PURPLE 4
-#define CYAN 5
-#define RESET "\033[0m"
-
 const char	*color_table[] =
 {
  	"\e[0;31m",
