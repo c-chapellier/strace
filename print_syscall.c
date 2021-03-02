@@ -36,7 +36,7 @@ static void print_str(const char *str)
 		int i = 0;
 
 		printf("\"");
-		while (str[i] != '\0')
+		while (str[i] != '\0' && i < 32)
 		{
 			switch (str[i])
 			{
@@ -55,6 +55,9 @@ static void print_str(const char *str)
 				case '\f':
 					printf("\\f");
 					break ;
+				case '\"':
+					printf("\\\"");
+					break ;
 				default:
 					printf("%c", str[i]);
 					break ;
@@ -62,6 +65,10 @@ static void print_str(const char *str)
 			++i;
 		}
 		printf("\"");
+		if (str[i] != '\0')
+		{
+			printf("...");
+		}
 	}
 }
 
@@ -103,6 +110,18 @@ static char	**get_str_tab_from_child(pid_t child_pid, unsigned long addr) // may
 	return (str_tab);
 }
 
+static void free_2d(void **array)
+{
+	int i = 0;
+
+	while (array[i] != NULL)
+	{
+		free(array[i]);
+		++i;
+	}
+	free(array);
+}
+
 static void	print_str_tab_from_child(pid_t child_pid, unsigned long addr)
 {
 	int i = 0;
@@ -136,18 +155,7 @@ static void	print_str_tab_from_child(pid_t child_pid, unsigned long addr)
 		}
 		printf("]");
 	}
-}
-
-static void free_2d(void **array)
-{
-	int i = 0;
-
-	while (array[i] != NULL)
-	{
-		free(array[i]);
-		++i;
-	}
-	free(array);
+	free_2d((void **)str_tab);
 }
 
 static void print_str_from_child(pid_t child_pid, unsigned long reg)
@@ -184,16 +192,18 @@ void		print_rax(unsigned long rax)
 	printf(") = %ld", rax);
 	if ((long)rax < 0)
 	{
+		printf("%s", color_table[RED]);
 		unsigned long tracee_errno = 0xFFFFFFFFFFFFFFFF - rax + 1;
-		printf(" %ld (%s)", tracee_errno, strerror(tracee_errno));
+		printf(" %s (%s)", ft_errno_name(tracee_errno), ft_strerror(tracee_errno));
+		printf("%s", RESET);
 	}
 	printf("\n");
 }
 
 static void print_know_syscall_64(pid_t child_pid, struct user_regs_struct regs)
 {
-	static int	i = 0;
-	static int	last_syscall = -1;
+	static int				i = 0;
+	static unsigned long	last_syscall = -1;
 
 	if (regs.orig_rax != last_syscall)
 	{

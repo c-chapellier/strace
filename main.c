@@ -18,7 +18,7 @@ void parent(pid_t child_pid)
 		{
 			unsigned long exit_value;
 			ptrace(PTRACE_GETEVENTMSG, child_pid, NULL, &exit_value);
-			printf(") = ?\n+++ exited with %lu +++\n", exit_value);
+			printf(") = ?\n+++ exited with %lu +++\n", exit_value / 256);
 			break;
 		}
 
@@ -27,7 +27,12 @@ void parent(pid_t child_pid)
 		if (WSTOPSIG(wstatus) == 133)	// PTRACE_EVENT_STOP
 		{
         	ptrace(PTRACE_GETREGS, child_pid, NULL, &regs);
+<<<<<<< HEAD
 			if (regs.rax == -ENOSYS && regs.orig_rax == 59) // if execve is called (always 64 bits)
+=======
+
+			if ((int)regs.rax == -ENOSYS && regs.orig_rax == 59)	// if execve is called
+>>>>>>> c67cadb2d2546cbd8644d31fe076047cb7f11dc8
 			{
 				is_in_execve = 1;
 			}
@@ -44,7 +49,7 @@ void parent(pid_t child_pid)
 
 			if (is_in_execve)	// display only syscalls of called program (after execve)
 			{
-				if (regs.rax == -ENOSYS)	// in a syscall
+				if ((int)regs.rax == -ENOSYS)	// in a syscall
 				{
 					print_syscall(child_pid, regs, is_32bits);
 				}
@@ -61,12 +66,11 @@ void parent(pid_t child_pid)
 }
 
 void child(char *argv[])
-{
+{	
 	raise(SIGSTOP);
     execve(argv[1], &argv[1], environ);
 	//system(argv[1]);
-	perror("execve");
-	exit(-1);
+	exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -78,6 +82,14 @@ int main(int argc, char *argv[])
 		printf("usage: PROG [ARGS]\n");
 		exit(-1);
 	}
+
+	struct stat	buffer;
+  	if (stat(argv[1], &buffer) == -1)
+	{
+		printf("ft_strace: Can't stat '%s': No such file or directory\n", argv[1]);
+		exit(-1);
+	}
+
     child_pid = fork();
     if (child_pid == -1)
     {

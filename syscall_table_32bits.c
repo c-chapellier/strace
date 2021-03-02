@@ -1,6 +1,12 @@
 #include "strace.h"
 
+<<<<<<< HEAD
 const syscall_t	syscall_table_32[386] =
+=======
+//from https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86-32_bit
+
+const syscall_t	syscall_table_32[330] =
+>>>>>>> c67cadb2d2546cbd8644d31fe076047cb7f11dc8
 {
     {"restart_syscall", 0, NONE, NONE, NONE, NONE, NONE, NONE},
     {"exit", 1, NUMBER, NONE, NONE, NONE, NONE, NONE},
