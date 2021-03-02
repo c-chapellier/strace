@@ -27,12 +27,8 @@ void parent(pid_t child_pid)
 		if (WSTOPSIG(wstatus) == 133)	// PTRACE_EVENT_STOP
 		{
         	ptrace(PTRACE_GETREGS, child_pid, NULL, &regs);
-<<<<<<< HEAD
-			if (regs.rax == -ENOSYS && regs.orig_rax == 59) // if execve is called (always 64 bits)
-=======
 
-			if ((int)regs.rax == -ENOSYS && regs.orig_rax == 59)	// if execve is called
->>>>>>> c67cadb2d2546cbd8644d31fe076047cb7f11dc8
+			if ((int)regs.rax == -ENOSYS && regs.orig_rax == 59)	// if execve is called (always 64 bits)
 			{
 				is_in_execve = 1;
 			}
