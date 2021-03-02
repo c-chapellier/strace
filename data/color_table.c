@@ -1,6 +1,6 @@
 #include "strace.h"
 
-const char	*color_table[] =
+const char	*color_table[7] =
 {
  	"\e[0;31m",
  	"\e[0;32m",

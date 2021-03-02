@@ -22,8 +22,8 @@
 #define NUMBER		3
 #define NONE		4
 
-#define MAX_SYSCALL 328
 #define MAX_SYSCALL_32 384
+#define MAX_SYSCALL_64 328
 
 #define RED 0
 #define GREEN 1
@@ -52,17 +52,17 @@ typedef struct	s_ft_errno
 	char		*interpretation;
 }				ft_errno_t;
 
+extern char				**environ;
+extern const syscall_t	syscall_table_64[330];
+extern const syscall_t	syscall_table_32[386];
+extern const char		*color_table[7];
+extern const ft_errno_t	errno_table[127];
+
 void	print_rax(unsigned long rax);
 void	print_syscall(pid_t child_pid, struct user_regs_struct regs, int is_32bits);
 
 char    *ft_strerror(int errnum);
 void    ft_perror(const char *s);
 char	*ft_errno_name(int errnum);
-
-extern char				**environ;
-extern const syscall_t	syscall_table[330];
-extern const syscall_t	syscall_table_32[386];
-extern const char		*color_table[];
-extern const ft_errno_t	errno_table[127];
 
 #endif

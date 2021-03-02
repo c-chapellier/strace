@@ -1,6 +1,6 @@
 #include "strace.h"
 
-//from https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86-32_bit
+// from https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md#x86-32_bit
 
 const syscall_t	syscall_table_32[386] =
 {

@@ -1,6 +1,6 @@
 #include "strace.h"
 
-const syscall_t	syscall_table[330] =
+const syscall_t	syscall_table_64[330] =
 {
 	{"read", 0, NUMBER, STRING, NUMBER, NONE, NONE, NONE},
 	{"write", 1, NUMBER, STRING, NUMBER, NONE, NONE, NONE},
