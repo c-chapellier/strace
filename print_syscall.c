@@ -190,7 +190,7 @@ void		print_rax(unsigned long rax)
 	printf("\n");
 }
 
-static void print_know_syscall(pid_t child_pid, struct user_regs_struct regs)
+static void print_know_syscall_64(pid_t child_pid, struct user_regs_struct regs)
 {
 	static int	i = 0;
 	static int	last_syscall = -1;
@@ -204,7 +204,7 @@ static void print_know_syscall(pid_t child_pid, struct user_regs_struct regs)
 		}
 	}
 	printf("%s", color_table[i]);
-    printf("%s", syscall_table[regs.orig_rax].name);
+    	printf("%s", syscall_table[regs.orig_rax].name);
 	printf("\e[0m");
 
 	last_syscall = regs.orig_rax;
@@ -241,9 +241,60 @@ static void print_know_syscall(pid_t child_pid, struct user_regs_struct regs)
 	}
 }
 
+static void print_know_syscall_32(pid_t child_pid, struct user_regs_struct regs)
+{
+	static int	i = 0;
+	static int	last_syscall = -1;
+
+	if (regs.orig_rax != last_syscall)
+	{
+		++i;
+		if (color_table[i] == NULL)
+		{
+			i = 0;
+		}
+	}
+	printf("%s", color_table[i]);
+    	printf("%s", syscall_table_32[regs.orig_rax].name);
+	printf("\e[0m");
+
+	last_syscall = regs.orig_rax;
+
+	printf("(");
+	if (syscall_table_32[regs.orig_rax].rdi != NONE)
+	{
+   		print_reg(child_pid, regs.rbx, syscall_table_32[regs.orig_rax].rdi);
+	}
+	if (syscall_table_32[regs.orig_rax].rsi != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.rcx, syscall_table_32[regs.orig_rax].rsi);
+	}
+	if (syscall_table_32[regs.orig_rax].rdx != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.rdx, syscall_table_32[regs.orig_rax].rdx);
+	}
+	if (syscall_table_32[regs.orig_rax].r10 != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.rsi, syscall_table_32[regs.orig_rax].rdx);
+	}
+	if (syscall_table_32[regs.orig_rax].r8 != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.rdi, syscall_table_32[regs.orig_rax].rdx);
+	}
+	if (syscall_table_32[regs.orig_rax].r9 != NONE)
+	{
+		printf(", ");
+		print_reg(child_pid, regs.rbp, syscall_table_32[regs.orig_rax].rdx);
+	}
+}
+
 static void print_unknow_syscall(pid_t child_pid, struct user_regs_struct regs)
 {
-    printf("syscall_%lx(", regs.orig_rax);
+    printf("syscall_%llx(", regs.orig_rax);
    	print_reg(child_pid, regs.rdi, NUMBER);
 	printf(", ");
 	print_reg(child_pid, regs.rsi, NUMBER);
@@ -257,15 +308,22 @@ static void print_unknow_syscall(pid_t child_pid, struct user_regs_struct regs)
 	print_reg(child_pid, regs.r9, NUMBER);
 }
 
-void    print_syscall(pid_t child_pid, struct user_regs_struct regs)
+void    print_syscall(pid_t child_pid, struct user_regs_struct regs, int is_32bits)
 {
-	if (regs.orig_rax > MAX_SYSCALL)
+	if ((is_32bits && regs.orig_rax > MAX_SYSCALL_32) || (!is_32bits && regs.orig_rax > MAX_SYSCALL))
 	{
 		print_unknow_syscall(child_pid, regs);
 	}
 	else
 	{
-		print_know_syscall(child_pid, regs);
+		if (is_32bits)
+		{
+			print_know_syscall_32(child_pid, regs);
+		}
+		else
+		{
+			print_know_syscall_64(child_pid, regs);
+		}
 	}
 	fflush(stdout);
 }

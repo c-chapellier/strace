@@ -5,6 +5,7 @@ void parent(pid_t child_pid)
     int                         wstatus;
 	struct user_regs_struct     regs;
 	int							is_in_execve = 0;
+	int			is_32bits = 0, is_brk_checked = 0;
 
 	ptrace(PTRACE_SEIZE, child_pid, 0,	PTRACE_O_TRACESYSGOOD |
 										PTRACE_O_TRACEEXEC |
@@ -26,17 +27,26 @@ void parent(pid_t child_pid)
 		if (WSTOPSIG(wstatus) == 133)	// PTRACE_EVENT_STOP
 		{
         	ptrace(PTRACE_GETREGS, child_pid, NULL, &regs);
-
-			if (regs.rax == -ENOSYS && regs.orig_rax == 59)	// if execve is called
+			if (regs.rax == -ENOSYS && regs.orig_rax == 59) // if execve is called (always 64 bits)
 			{
 				is_in_execve = 1;
+			}
+
+			if (!is_brk_checked && regs.rax == -ENOSYS && (regs.orig_rax == 12 || regs.orig_rax == 45))
+			{
+				if (regs.orig_rax == 45)
+				{
+					printf("ft_strace: [ Process PID=%d runs in 32 bit mode. ]\n", child_pid);
+					is_32bits = 1;
+				}
+				is_brk_checked = 1;
 			}
 
 			if (is_in_execve)	// display only syscalls of called program (after execve)
 			{
 				if (regs.rax == -ENOSYS)	// in a syscall
 				{
-					print_syscall(child_pid, regs);
+					print_syscall(child_pid, regs, is_32bits);
 				}
 				else
 				{

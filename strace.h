@@ -1,6 +1,7 @@
 #ifndef STRACE_H
 #define STRACE_H
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -21,6 +22,7 @@
 #define NONE		4
 
 #define MAX_SYSCALL 328
+#define MAX_SYSCALL_32 384
 
 typedef struct	s_syscall
 {
@@ -35,10 +37,11 @@ typedef struct	s_syscall
 }				syscall_t;
 
 void	print_rax(unsigned long rax);
-void	print_syscall(pid_t child_pid, struct user_regs_struct regs);
+void	print_syscall(pid_t child_pid, struct user_regs_struct regs, int is_32bits);
 
 extern char				**environ;
 extern const syscall_t	syscall_table[330];
+extern const syscall_t	syscall_table_32[386];
 extern const char		*color_table[];
 
 #endif

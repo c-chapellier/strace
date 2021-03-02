@@ -1,5 +1,6 @@
 SRCS =	main.c \
 		syscall_table.c \
+		syscall_table_32bits.c \
 		print_syscall.c \
 		color_table.c
 
