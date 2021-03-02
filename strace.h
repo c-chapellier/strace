@@ -22,6 +22,14 @@
 
 #define MAX_SYSCALL 328
 
+#define RED 0
+#define GREEN 1
+#define BROWN 2
+#define BLUE 3
+#define PURPLE 4
+#define CYAN 5
+#define RESET "\033[0m"
+
 typedef struct	s_syscall
 {
 	char		*name;
